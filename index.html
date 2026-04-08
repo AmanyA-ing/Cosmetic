@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Cosmetic Pro IA</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>✨ COSMETIC PRO IA</h1>
+
+    <div class="grid">
+        <div class="card">
+            <h3>🛍️ Nouvelle Vente</h3>
+            <input type="text" id="p" placeholder="Nom du produit">
+            <input type="number" id="pr" placeholder="Prix (CFA)">
+            <select id="tp">
+                <option value="grasse">Peau Grasse</option>
+                <option value="seche">Peau Sèche</option>
+            </select>
+            <button class="btn-save" onclick="save()">ENREGISTRER</button>
+        </div>
+
+        <div class="card ia-card">
+            <h3>🤖 Assistant IA</h3>
+            <p>💡 Conseil : <b id="ia-p">---</b></p>
+            <p>💰 Prévision : <b id="ia-a">---</b> CFA</p>
+            <button class="btn-ia" onclick="askIA()">CONSULTER L'IA</button>
+        </div>
+    </div>
+
+    <div class="graph-box">
+        <h3>📊 Analyse Graphique</h3>
+        <img id="myGraph" src="http://127.0.0.1:4000/graphique-ventes" style="width:100%; border-radius: 10px;">
+    </div>
+
+    <table>
+        <thead>
+            <tr><th>Produit</th><th>Prix</th></tr>
+        </thead>
+        <tbody id="tab"></tbody>
+    </table>
+</div>
+
+<script>
+    const API = "http://127.0.0.1:4000";
+
+    async function save() {
+        const p = document.getElementById('p').value;
+        const pr = document.getElementById('pr').value;
+        if(!p || !pr) return alert("Remplis tout !");
+
+        const url = `${API}/ajouter-vente?produit=${encodeURIComponent(p)}&teint=Marron&prix=${pr}&qte=1&age=adulte&type_peau=seche`;
+        
+        try {
+            const r = await fetch(url, { 
+                method: 'POST', 
+                headers: { 'api-key': 'ABIDJAN_BEAUTY_2026' } 
+            });
+            if(r.ok) {
+                alert("✅ Vente enregistrée !");
+                load();
+                // On force l'image à se recharger en ajoutant un timestamp
+                document.getElementById('myGraph').src = `${API}/graphique-ventes?t=${new Date().getTime()}`;
+            }
+        } catch(e) { alert("Erreur de connexion"); }
+    }
+
+    async function askIA() {
+        const r = await fetch(`${API}/predire-ia`);
+        const d = await r.json();
+        document.getElementById('ia-p').innerText = d.produit;
+        document.getElementById('ia-a').innerText = d.argent;
+        document.getElementById('ia-clusters').innerText = d.clusters; // AJOUT ICI    
+        }
+
+    async function load() {
+        const r = await fetch(`${API}/voir-ventes`);
+        const d = await r.json();
+        document.getElementById('tab').innerHTML = d.reverse().map(v => `
+            <tr><td><b>${v.produit}</b></td><td>${v.prix} CFA</td></tr>
+        `).join('');
+    }
+
+    load();
+</script>
+</body>
+</html>
